@@ -16,9 +16,19 @@
 
 package workshop
 
-import gastronomy.*, gossamer.*, scintillate.*, rudiments.*, gesticulate.*,
-guillotine.*, kaleidoscope.*, euphemism.*, escapade.*, jovian.*, eucalyptus.*,
-honeycomb.*, punctuation.*
+import gastronomy.*
+import gossamer.*
+import scintillate.*
+import rudiments.*
+import gesticulate.*
+import guillotine.*
+// import kaleidoscope.*
+import euphemism.*
+import escapade.*
+import jovian.*
+import eucalyptus.*
+import honeycomb.*
+import punctuation.*
 
 import scala.concurrent.*
 
