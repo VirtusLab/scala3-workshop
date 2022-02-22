@@ -1,11 +1,11 @@
-//using lib "com.lihaoyi:cask_3:0.8.0"
-//using lib "com.lihaoyi:requests_3:0.7.0"
-//using lib "com.lihaoyi:scalatags_sjs1_3:0.11.0"
-//using lib "com.lihaoyi:os-lib_3:0.8.0"
-//using lib "com.lihaoyi:upickle_3:1.4.4"
-//using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
+// using lib "com.lihaoyi::cask:0.8.0"
+// using lib "com.lihaoyi::requests:0.7.0"
+// using lib "com.lihaoyi::scalatags:0.11.1"
+// using lib "com.lihaoyi::os-lib:0.8.0"
+// using lib "com.lihaoyi::upickle:1.4.4"
+// using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
 
-// using scala 3.0.0
+// using scala "3.0.0"
 
 package workshop
 
@@ -43,12 +43,8 @@ object CaskHttpServer extends cask.MainRoutes{
       Template(
           "Start",
           h1("Welcome"),
-          div("Please", a(href:="/login")("log in"), " to play.")
+          div("Please ", a(href:="/login")("log in"), " to play.")
       )
-      // println(temp)
-      // cask.Response(
-      //   "Hello"
-      // )
     }
 
     @get("/start")
