@@ -65,7 +65,7 @@ object CaskHttpServer extends cask.MainRoutes{
     }
 
     @get("/run")
-    def run() = {
+    def run(): Response.Raw = {
         if authCode.isEmpty then Redirect("/login")
         else
             val chosen = items(Random.nextInt(items.size))
@@ -121,7 +121,6 @@ object CaskHttpServer extends cask.MainRoutes{
         Template(
             "Your results...",
             h1(
-                // if lev(name.toLowerCase(), guess.toLowerCase()) < 4 then "Well done!"
                 if LevenshteinDistance.distance(name.toLowerCase(), guess.toLowerCase()) < 4 then "Well done!"
                 else "Whoops..."
             ),
@@ -137,8 +136,8 @@ object CaskHttpServer extends cask.MainRoutes{
 
 object Template:
   def styles: String = os.read(os.pwd/"styles.css")
-  def apply(title: String, content: scalatags.generic.Modifier[scalatags.text.Builder]*)  =
-  doctype("html")(html(head(link(styles), tag("title")(title)), body(content: _*)))
+  def apply(title: String, content: scalatags.generic.Modifier[scalatags.text.Builder]*): scalatags.Text.all.doctype =
+    doctype("html")(html(head(link(styles), tag("title")(title)), body(content: _*)))
 
 type Name = String
 
