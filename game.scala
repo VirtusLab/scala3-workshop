@@ -4,6 +4,7 @@
 // using lib "com.lihaoyi::os-lib:0.8.0"
 // using lib "com.lihaoyi::upickle:1.4.4"
 // using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
+// // using lib "io.lemonlabs::scala-uri:4.0.0"
 
 // using scala "3.0.0"
 
@@ -14,9 +15,10 @@ import requests.{Response => rResponse, head=>rHead, *}
 import scalatags.Text.all.*
 import os.*
 import upickle.default.{ReadWriter => RW, macroRW, read, *}
-// import upickle.default.ReadWriter.join
 
 import com.github.vickumar1981.stringdistance.LevenshteinDistance
+
+// import io.lemonlabs.uri.{Url, QueryString}
 
 import java.util.Base64
 import java.nio.charset.StandardCharsets
@@ -35,6 +37,8 @@ object CaskHttpServer extends cask.MainRoutes{
     val items: List[Entry] = Spotify.playlistItems(auth, playlist)
     println(s"Fetched ${items.size} tracks")
     println("Starting web server on port 8080")
+
+    println(Spotify.loginUrl)
 
     var authCode: Option[RequestAuth] = None
 
@@ -60,75 +64,73 @@ object CaskHttpServer extends cask.MainRoutes{
         Redirect("/")
     }
 
-    // @get("/run")
-    // def run() = {
-    //     if authCode.isEmpty then Redirect("/login")
-    //     else
-    //         val chosen = items(Random.nextInt(items.size))
-    //         val answer = chosen.track.name.text
-    //         val auth = authCode.get
+    @get("/run")
+    def run() = {
+        if authCode.isEmpty then Redirect("/login")
+        else
+            val chosen = items(Random.nextInt(items.size))
+            val answer = chosen.track.name
+            val auth = authCode.get
 
-    //         try
-    //             Spotify.play(auth, playlist, items.indexOf(chosen))
+            try
+                Spotify.play(auth, playlist, items.indexOf(chosen))
 
-    //             Future {              // check Future
-    //                 Thread.sleep(7500)
-    //                 Spotify.pause(auth)
-    //             }
+                Future {
+                    Thread.sleep(7500)
+                    Spotify.pause(auth)
+                }
 
-    //             Response(
-    //                 Template(
-    //                     "Guess!",
-    //                     h1("Guess the song!"),
-    //                     div("Clue: ${chosen.track.name.initials}"),
-    //                     form(action := "/submit", method := "post")(
-    //                         input(
-    //                             `type` := "text", 
-    //                             name := "anwer", 
-    //                             placeholder := Base64.getEncoder.encodeToString(answer.getBytes(StandardCharsets.UTF_8)), 
-    //                             width := "0%"),
-    //                         input(
-    //                             `type` := "text", 
-    //                             name := "guess", 
-    //                             width := "80%"),
-    //                         input(
-    //                             `type` := "submit", 
-    //                             value := "Guess", 
-    //                             width := "20%")
-    //                     )
-    //                 )
-    //             )
+                Response(
+                  Template(
+                    "Guess!",
+                    h1("Guess the song!"),
+                    div("Clue: ${chosen.track.name.initials}"),
+                    form(action := "/submit", method := "post")(
+                        input(
+                            `type` := "text", 
+                            name := "anwer", 
+                            placeholder := Base64.getEncoder.encodeToString(answer.getBytes(StandardCharsets.UTF_8)), 
+                            width := "0%"),
+                        input(
+                            `type` := "text", 
+                            name := "guess", 
+                            width := "80%"),
+                        input(
+                            `type` := "submit", 
+                            value := "Guess", 
+                            width := "20%")
+                    )
+                  )
+                )
 
-    //         catch
-    //             case err: Error =>
-    //                 Response(
-    //                     Template("Error!", div("An unknown error has occurred"))
-    //                 )
-    // }
+            catch
+                case err: Error =>
+                    Response(
+                        Template("Error!", div("An unknown error has occurred"))
+                    )
+    }
 
-    // @get("/login")
-    // def login() = {
-    //     Redirect(Spotify.loginUrl)
-    // }
+    @get("/login")
+    def login() = {
+        Redirect(Spotify.loginUrl)
+    }
 
-    // @get("/submit")
-    // def submit(answer: String, guess: String) = {
-    //     val name = new String(Base64.getDecoder.decode(answer), StandardCharsets.UTF_8)
-    //     Response(
-    //         Template(
-    //             "Your results...",
-    //             h1(
-    //                 // if lev(name.toLowerCase(), guess.toLowerCase()) < 4 then "Well done!"
-    //                 if LevenshteinDistance.distance(name.toLowerCase(), guess.toLowerCase()) < 4 then "Well done!"
-    //                 else "Whoops..."
-    //             ),
-    //             div(
-    //                 s"The correct answer was ${name}. ", 
-    //                 a(href:="/run")("Another go?")
-    //             )
-    //         )
-    //     )
-    // }
+    @get("/submit")
+    def submit(answer: String, guess: String) = {
+        val name = new String(Base64.getDecoder.decode(answer), StandardCharsets.UTF_8)
+        Template(
+            "Your results...",
+            h1(
+                // if lev(name.toLowerCase(), guess.toLowerCase()) < 4 then "Well done!"
+                if LevenshteinDistance.distance(name.toLowerCase(), guess.toLowerCase()) < 4 then "Well done!"
+                else "Whoops..."
+            ),
+            div(
+                s"The correct answer was ${name}. ", 
+                a(href:="/run")("Another go?")
+            )
+        )
+    }
 
     initialize()
 }
@@ -136,14 +138,9 @@ object CaskHttpServer extends cask.MainRoutes{
 object Template:
   def styles: String = os.read(os.pwd/"styles.css")
   def apply(title: String, content: scalatags.generic.Modifier[scalatags.text.Builder]*)  =
-    // "<!DOCTYPE html>" + html(head(link(styles), tag("title")(title)), body(content: _*))
-  html(head(link(styles), tag("title")(title)), body(content: _*))
+  doctype("html")(html(head(link(styles), tag("title")(title)), body(content: _*)))
 
-// case class Name(text: String) extends AnyVal
 type Name = String
-// object Name {
-//   def apply(name: String): Name = name
-// }
 
 case class Entry(track: Track)
 case class Track(album: Album, name: Name)
@@ -153,8 +150,8 @@ case class Playlist(items: List[Entry])
 case class PlaylistRef(uri: String, name: Name, id: String)
 
 object Spotify:
-  private val ClientId = "7154131346a640ee82dbd02ccfb72a50"
-  private val ClientSecret = "f81e25c96ee44af7967179bb3c6998e2"
+  private val ClientId = "1588c59aabee43ca9f4d30d5695a4a0c"
+  private val ClientSecret = "d6dc6fb3f2e54982ab4af782ecb75a0e"
   private val clientAuth = RequestAuth.Basic(ClientId, ClientSecret)
   private val RedirectUrl = "http://introsgame.cc:8080/start"
   private val urlEncoded = "application/x-www-form-urlencoded"
@@ -185,7 +182,12 @@ object Spotify:
 
 
   def loginUrl: String =
-      "https://accounts.spotify.com/authorize" // TO-DO
+      "https://accounts.spotify.com/authorize?" + 
+      s"client_id=${ClientId}&" + 
+      "response_type=code&" + 
+      s"redirect_uri=${RedirectUrl}&" + 
+      "scope=user-read-playback-state+user-modify-playback-state"
+      // https://accounts.spotify.com/authorize?client_id=7154131346a640ee82dbd02ccfb72a50&response_type=code&redirect_uri=http%3A%2F%2Fintrosgame.cc%3A8080%2Fstart&scope=user-read-playback-state+user-modify-playback-state
 
   def playlists(auth: RequestAuth, user: String): List[PlaylistRef] =
     val r = requests.get(
