@@ -7,7 +7,7 @@
 
 // using scala "3.0.0"
 
-package workshop
+package workshop.src
 
 import cask.*
 import requests.{Response => rResponse, head=>rHead, *}
