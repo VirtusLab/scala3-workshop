@@ -4,7 +4,6 @@
 // using lib "com.lihaoyi::os-lib:0.8.0"
 // using lib "com.lihaoyi::upickle:1.4.4"
 // using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
-// // using lib "io.lemonlabs::scala-uri:4.0.0"
 
 // using scala "3.0.0"
 
@@ -14,14 +13,13 @@ import cask.*
 import requests.{Response => rResponse, head=>rHead, *}
 import scalatags.Text.all.*
 import os.*
-import upickle.default.{ReadWriter => RW, macroRW, read, *}
+import upickle.default.{ReadWriter => RW, macroRW, read, write, *}
 
 import com.github.vickumar1981.stringdistance.LevenshteinDistance
 
-// import io.lemonlabs.uri.{Url, QueryString}
-
 import java.util.Base64
 import java.nio.charset.StandardCharsets
+import java.net.{ URLEncoder }
 
 import scala.concurrent.*
 import scala.util.Random
@@ -30,15 +28,13 @@ object CaskHttpServer extends cask.MainRoutes{
 
     var continue = true
     println("Logging client into Spotify")
-    val auth = Spotify.clientCredentials()
+    val auth: RequestAuth = Spotify.clientCredentials()
     println("Getting playlist...")
-    val playlist: PlaylistRef = Spotify.playlists(auth, "propensive").head
+    val playlist: PlaylistRef = Spotify.playlists(auth, "Miki").head
     println("Getting tracks from playlist...")
     val items: List[Entry] = Spotify.playlistItems(auth, playlist)
     println(s"Fetched ${items.size} tracks")
     println("Starting web server on port 8080")
-
-    println(Spotify.loginUrl)
 
     var authCode: Option[RequestAuth] = None
 
@@ -47,7 +43,8 @@ object CaskHttpServer extends cask.MainRoutes{
       Template(
           "Start",
           h1("Welcome"),
-          div("Please ", a(href:="/login")("log in"), " to play.")
+          div("Please ", a(href:="/test")("log in"), " to play."),
+          div("Please ", a(href:=Spotify.loginUrl)("log in"), " to play.")
       )
     }
 
@@ -84,12 +81,12 @@ object CaskHttpServer extends cask.MainRoutes{
                   Template(
                     "Guess!",
                     h1("Guess the song!"),
-                    div("Clue: ${chosen.track.name.initials}"),
-                    form(action := "/submit", method := "post")(
+                    div(s"Clue: ${chosen.track.name.take(2)}"),
+                    form(action := "/submit", method := "post", enctype := "application/x-www-form-urlencoded", autocomplete := false)(
                         input(
-                            `type` := "text", 
-                            name := "anwer", 
-                            placeholder := Base64.getEncoder.encodeToString(answer.getBytes(StandardCharsets.UTF_8)), 
+                            `type` := "hidden", 
+                            name := "answer", 
+                            value := Base64.getEncoder.encodeToString(answer.getBytes(StandardCharsets.UTF_8)), 
                             width := "0%"),
                         input(
                             `type` := "text", 
@@ -115,7 +112,7 @@ object CaskHttpServer extends cask.MainRoutes{
         Redirect(Spotify.loginUrl)
     }
 
-    @get("/submit")
+    @cask.postForm("/submit")
     def submit(answer: String, guess: String) = {
         val name = new String(Base64.getDecoder.decode(answer), StandardCharsets.UTF_8)
         Template(
@@ -152,7 +149,7 @@ object Spotify:
   private val ClientId = "1588c59aabee43ca9f4d30d5695a4a0c"
   private val ClientSecret = "d6dc6fb3f2e54982ab4af782ecb75a0e"
   private val clientAuth = RequestAuth.Basic(ClientId, ClientSecret)
-  private val RedirectUrl = "http://introsgame.cc:8080/start"
+  private val RedirectUrl = "http://localhost:8080/start"
   private val urlEncoded = "application/x-www-form-urlencoded"
 
   def clientCredentials(): RequestAuth =
@@ -177,20 +174,20 @@ object Spotify:
         ),
         auth = clientAuth
     )
-    RequestAuth.Bearer(r.headers("access_token").mkString(","))
-
+    val rjson = ujson.read(r.text())
+    RequestAuth.Bearer(read(rjson("access_token")))
 
   def loginUrl: String =
       "https://accounts.spotify.com/authorize?" + 
-      s"client_id=${ClientId}&" + 
-      "response_type=code&" + 
-      s"redirect_uri=${RedirectUrl}&" + 
-      "scope=user-read-playback-state+user-modify-playback-state"
-      // https://accounts.spotify.com/authorize?client_id=7154131346a640ee82dbd02ccfb72a50&response_type=code&redirect_uri=http%3A%2F%2Fintrosgame.cc%3A8080%2Fstart&scope=user-read-playback-state+user-modify-playback-state
+      "client_id=" + URLEncoder.encode(ClientId, "UTF-8") +
+      "&response_type=" + URLEncoder.encode("code", "UTF-8") +
+      "&redirect_uri=" + URLEncoder.encode(RedirectUrl, "UTF-8") +
+      "&scope=" + URLEncoder.encode("user-read-playback-state user-modify-playback-state", "UTF-8") 
 
   def playlists(auth: RequestAuth, user: String): List[PlaylistRef] =
+    val playlists_url = s"https://api.spotify.com/v1/users/$user/playlists"
     val r = requests.get(
-        s"https://api.spotify.com/v1/users/$user/playlists",
+        playlists_url,
         auth = auth
     )
 
@@ -210,7 +207,7 @@ object Spotify:
     given albumR:upickle.default.Reader[Album] = upickle.default.macroR[Album]
     given trackR:upickle.default.Reader[Track] = upickle.default.macroR[Track]
     given entryR:upickle.default.Reader[Entry] = upickle.default.macroR[Entry]
-    upickle.default.read[List[Entry]](rjson("items"))
+    read[List[Entry]](rjson("items"))
 
   def play(auth: RequestAuth, playlist: PlaylistRef, offset: Int)=//: HttpStatus =
     case class Offset(position: Int)
@@ -223,8 +220,8 @@ object Spotify:
     val r = requests.put(
         "https://api.spotify.com/v1/me/player/play",
         auth = auth,
-        // body = upickle.default.writable(body)
-    ) // TO-DO
+        data = write(body)
+    ) 
 
   def pause(auth: RequestAuth): Unit = 
       val r = requests.put(
