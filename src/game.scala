@@ -13,7 +13,7 @@ import cask.*
 import requests.{Response => rResponse, head=>rHead, *}
 import scalatags.Text.all.*
 import os.*
-import upickle.default.{ReadWriter => RW, macroRW, read, write, *}
+import upickle.default.{ReadWriter => RW, Reader, macroRW, macroR, read, write, *}
 
 import com.github.vickumar1981.stringdistance.LevenshteinDistance
 
@@ -23,6 +23,8 @@ import java.net.{ URLEncoder }
 
 import scala.concurrent.*
 import scala.util.Random
+
+var test_flag = false
 
 object CaskHttpServer extends cask.MainRoutes{
 
@@ -43,7 +45,6 @@ object CaskHttpServer extends cask.MainRoutes{
       Template(
           "Start",
           h1("Welcome"),
-          div("Please ", a(href:="/test")("log in"), " to play."),
           div("Please ", a(href:=Spotify.loginUrl)("log in"), " to play.")
       )
     }
@@ -63,7 +64,12 @@ object CaskHttpServer extends cask.MainRoutes{
 
     @get("/run")
     def run(): Response.Raw = {
-        if authCode.isEmpty then Redirect("/login")
+        if authCode.isEmpty then 
+            Template(
+                "Authorization failed",
+                h1("Authorization failed"),
+                div("Please try ", a(href:=Spotify.loginUrl)("log in"), " again to play.")
+            )
         else
             val chosen = items(Random.nextInt(items.size))
             val answer = chosen.track.name
@@ -132,7 +138,7 @@ object CaskHttpServer extends cask.MainRoutes{
 }
 
 object Template:
-  def styles: String = os.read(os.pwd/"styles.css")
+  def styles: String = if test_flag==true then os.read(os.pwd/os.up/"styles"/"styles.css") else os.read(os.pwd/"styles"/"styles.css")
   def apply(title: String, content: scalatags.generic.Modifier[scalatags.text.Builder]*): scalatags.Text.all.doctype =
     doctype("html")(html(head(link(styles), tag("title")(title)), body(content: _*)))
 
@@ -192,7 +198,7 @@ object Spotify:
     )
 
     val rjson = ujson.read(r.text())
-    given playlistRefRW:upickle.default.ReadWriter[PlaylistRef] = upickle.default.macroRW[PlaylistRef]
+    given playlistRefRW:RW[PlaylistRef] = macroRW[PlaylistRef]
     read[List[PlaylistRef]](rjson("items"))
 
   def playlistItems(auth: RequestAuth, playlist: PlaylistRef): List[Entry] =
@@ -203,17 +209,18 @@ object Spotify:
 
     val rjson = ujson.read(r.text())
 
-    given artistR:upickle.default.Reader[Artist] = upickle.default.macroR[Artist]
-    given albumR:upickle.default.Reader[Album] = upickle.default.macroR[Album]
-    given trackR:upickle.default.Reader[Track] = upickle.default.macroR[Track]
-    given entryR:upickle.default.Reader[Entry] = upickle.default.macroR[Entry]
+    given artistR:Reader[Artist] = macroR[Artist]
+    given albumR:Reader[Album] = macroR[Album]
+    given trackR:Reader[Track] = macroR[Track]
+    given entryR:Reader[Entry] = macroR[Entry]
     read[List[Entry]](rjson("items"))
 
   def play(auth: RequestAuth, playlist: PlaylistRef, offset: Int)=//: HttpStatus =
     case class Offset(position: Int)
     case class Body(context_uri: String, offset: Offset, position_ms: Int)
-    implicit def offsetR:upickle.default.ReadWriter[Offset] = upickle.default.macroRW[Offset]
-    implicit val rw: upickle.default.ReadWriter[Body] = upickle.default.macroRW[Body]
+    
+    implicit def offsetR:RW[Offset] = macroRW[Offset]
+    implicit val rw: RW[Body] = macroRW[Body]
 
     val body = Body(playlist.uri, Offset(offset), 0)
     
@@ -228,3 +235,4 @@ object Spotify:
         "https://api.spotify.com/v1/me/player/pause",
         auth = auth
     )
+  
