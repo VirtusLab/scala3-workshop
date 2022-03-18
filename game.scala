@@ -1,13 +1,11 @@
-// using lib "com.lihaoyi::cask:0.8.0"
-// using lib "com.lihaoyi::requests:0.7.0"
-// using lib "com.lihaoyi::scalatags:0.11.1"
-// using lib "com.lihaoyi::os-lib:0.8.0"
-// using lib "com.lihaoyi::upickle:1.4.4"
-// using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
+//> using scala "3.1.1"
 
-// using scala "3.0.0"
-
-package workshop.src
+//> using lib "com.lihaoyi::cask:0.8.0"
+//> using lib "com.lihaoyi::requests:0.7.0"
+//> using lib "com.lihaoyi::scalatags:0.11.1"
+//> using lib "com.lihaoyi::os-lib:0.8.0"
+//> using lib "com.lihaoyi::upickle:1.4.4"
+//> using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
 
 import cask.*
 import requests.{Response => rResponse, head=>rHead, *}
@@ -23,8 +21,6 @@ import java.net.{ URLEncoder }
 
 import scala.concurrent.*
 import scala.util.Random
-
-var test_flag = false
 
 object CaskHttpServer extends cask.MainRoutes{
 
@@ -138,9 +134,9 @@ object CaskHttpServer extends cask.MainRoutes{
 }
 
 object Template:
-  def styles: String = if test_flag==true then os.read(os.pwd/os.up/"styles"/"styles.css") else os.read(os.pwd/"styles"/"styles.css")
+  private lazy val styles = tag("style")(os.read(os.pwd / "styles" / "styles.css"))
   def apply(title: String, content: scalatags.generic.Modifier[scalatags.text.Builder]*): scalatags.Text.all.doctype =
-    doctype("html")(html(head(link(styles), tag("title")(title)), body(content: _*)))
+    doctype("html")(html(styles, head(tag("title")(title)), body(content: _*)))
 
 type Name = String
 
@@ -215,7 +211,7 @@ object Spotify:
     given entryR:Reader[Entry] = macroR[Entry]
     read[List[Entry]](rjson("items"))
 
-  def play(auth: RequestAuth, playlist: PlaylistRef, offset: Int)=//: HttpStatus =
+  def play(auth: RequestAuth, playlist: PlaylistRef, offset: Int) =
     case class Offset(position: Int)
     case class Body(context_uri: String, offset: Offset, position_ms: Int)
     

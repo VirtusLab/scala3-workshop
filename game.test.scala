@@ -1,13 +1,5 @@
-// using lib "com.lihaoyi::utest:0.7.10"
-// using lib "com.lihaoyi::requests:0.7.0"
-// using lib "com.lihaoyi::scalatags:0.11.1"
-// using lib "io.undertow:undertow-core:2.2.3.Final"
-
-// using scala "3.0.0"
-
-package workshop.test
-
-import workshop.src.*
+//> using lib "com.lihaoyi::utest:0.7.10"
+//> using lib "io.undertow:undertow-core:2.2.3.Final"
 
 import scalatags.Text.all.*
 import utest._
@@ -20,8 +12,6 @@ import java.net.{ URLEncoder, URLDecoder }
 
 object GameTests extends TestSuite{
     val auth: Option[RequestAuth] = None
-
-    test_flag = true
 
     def withServer[T](example: cask.main.Main, endpoint: String)(f: String => T): T = {
         val server = Undertow.builder
