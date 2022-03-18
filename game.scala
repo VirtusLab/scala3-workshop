@@ -6,6 +6,7 @@
 //> using lib "com.lihaoyi::os-lib:0.8.0"
 //> using lib "com.lihaoyi::upickle:1.4.4"
 //> using lib "com.github.vickumar1981:stringdistance_2.13:1.2.6"
+//> using resourceDir "./styles/"
 
 import cask.*
 import requests.{Response => rResponse, head => rHead, *}
@@ -135,7 +136,8 @@ object CaskHttpServer extends cask.MainRoutes {
 }
 
 object Template:
-  private lazy val styles = tag("style")(os.read(os.pwd / "styles" / "styles.css"))
+  private lazy val styles =
+    tag("style")(os.read(os.resource(getClass.getClassLoader) / "styles.css"))
   def apply(
       title: String,
       content: scalatags.generic.Modifier[scalatags.text.Builder]*
