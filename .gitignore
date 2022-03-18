@@ -3,3 +3,6 @@
 .bsp
 .scala
 .vscode
+**/.metals
+**/.scala-build
+**/.bloop

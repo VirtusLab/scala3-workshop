@@ -70,8 +70,7 @@ object GameTests extends TestSuite {
           try {
             val body = requests.get(host).text()
           } catch {
-            case e: requests.RequestFailedException =>
-              e
+            case e: requests.RequestFailedException => ()
           }
         }
       }
