@@ -1,6 +1,6 @@
 *.class
 *.log
-.bsp
+**/.bsp
 .scala
 .vscode
 **/.metals
