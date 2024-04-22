@@ -1,0 +1,7 @@
+tasks:
+  # Install Scala-cli
+  - before: brew install Virtuslab/scala-cli/scala-cli
+    init: |
+      scala-cli config suppress-warning.directives-in-multiple-files true
+      scala-cli config suppress-warning.suppress-warning.outdated-dependencies-files true
+      scala-cli setup-ide .
