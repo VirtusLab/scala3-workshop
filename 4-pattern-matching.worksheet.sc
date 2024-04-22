@@ -15,7 +15,7 @@ p match {
 }
 
 val ScalaVersion = raw"(\d)\.(\d+)\.(\d+)(-.*)?$$".r
-val ScalaVersion(major, minor, patch, _) = "3.1.1-RC1"
+val ScalaVersion(major, minor, patch, _) = "3.1.1-RC1": @unchecked
 
 "3.1.1" match {
   case ScalaVersion(major, minor, _, PreRelease(preV)) =>

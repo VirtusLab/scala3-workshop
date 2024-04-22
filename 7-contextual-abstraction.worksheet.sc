@@ -1,8 +1,9 @@
-// Keyword 'given' allows you to define a value which would be implicitlly available in the given context
+import scala.language.implicitConversions
 
 case class MyContext(databaseURL: String)
 
 def start() =
+  // Keyword 'given' allows you to define a value which would be implicitlly available in the given context
   given ctx: MyContext = MyContext("https://prod.db/api")
   // Context is being implicitlly passed to the function call
   functionUsingContext(42)

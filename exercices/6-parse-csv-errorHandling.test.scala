@@ -1,9 +1,5 @@
-//> using:
-//>   lib "com.lihaoyi::utest::0.7.10"
-//>   target { scope "test" }
+//> using toolkit default
 package ex6
-
-import utest._
 
 case class Entry(
     id: Int,
@@ -14,8 +10,7 @@ case class Entry(
 )
 
 sealed trait DecodingFailure
-case class NumberConversionFailure(input: String, field: String)
-    extends DecodingFailure
+case class NumberConversionFailure(input: String, field: String) extends DecodingFailure
 case class IncorrectNumberOfFields(fields: List[String]) extends DecodingFailure
 case class EmptyString(field: String) extends DecodingFailure
 
@@ -69,74 +64,74 @@ def parseInput(input: String): List[DecoderResult[Entry]] =
     case fields => Left(IncorrectNumberOfFields(fields.toList))
   }
 
-object ParseCsvErrorHandlingSuite extends TestSuite {
+class ParseCsvErrorHandlingSuite extends munit.FunSuite {
   val header = "id, name, sectionId, salary, age"
-  override val tests = Tests {
-    test("decoder") {
-      test("empty strings") {
-        val input =
-          s"""$header
+  test("decode empty strings") {
+    val input =
+      s"""$header
              |1,  ,foo,10,10
              |2,name, ,11,12
              |3,name,sectionId, 12, 13
           """.stripMargin
-        assert(
-          parseInput(input) == Seq(
-            Left(EmptyString("name")),
-            Left(EmptyString("sectionId")),
-            Right(Entry(3, "name", "sectionId", 12, 13.toByte))
-          )
-        )
-      }
+    assertEquals(
+      parseInput(input),
+      List(
+        Left(EmptyString("name")),
+        Left(EmptyString("sectionId")),
+        Right(Entry(3, "name", "sectionId", 12, 13.toByte))
+      )
+    )
+  }
 
-      test("number decoding") {
-        val input =
-          s"""$header
+  test("decode numbers") {
+    val input =
+      s"""$header
               |id,a,b,foo,10
               |2,a,b,small,12
               |3,a,b, 12, young
               |4,a,b, 13,30
            """.stripMargin
-        assert(
-          parseInput(input) == Seq(
-            Left(NumberConversionFailure("id", field = "id")),
-            Left(NumberConversionFailure("small", field = "salary")),
-            Left(NumberConversionFailure("young", field = "age")),
-            Right(Entry(4, "a", "b", 13, 30.toByte))
-          )
-        )
-      }
+    assertEquals(
+      parseInput(input),
+      List(
+        Left(NumberConversionFailure("id", field = "id")),
+        Left(NumberConversionFailure("small", field = "salary")),
+        Left(NumberConversionFailure("young", field = "age")),
+        Right(Entry(4, "a", "b", 13, 30.toByte))
+      )
+    )
+  }
 
-      test("incorrect number of columns") {
-        val input =
-          s"""$header
+  test("incorrect number of columns") {
+    val input =
+      s"""$header
                 |1,name,section,1250
                 |2,name,section,1250,20
                 |3,name,section,1250,20,foobar
              """.stripMargin
-        assert(
-          parseInput(input) == Seq(
-            Left(IncorrectNumberOfFields(List("1", "name", "section", "1250"))),
-            Right(Entry(2, "name", "section", 1250, 20.toByte)),
-            Left(
-              IncorrectNumberOfFields(
-                List("3", "name", "section", "1250", "20", "foobar")
-              )
-            )
+    assertEquals(
+      parseInput(input),
+      List(
+        Left(IncorrectNumberOfFields(List("1", "name", "section", "1250"))),
+        Right(Entry(2, "name", "section", 1250, 20.toByte)),
+        Left(
+          IncorrectNumberOfFields(
+            List("3", "name", "section", "1250", "20", "foobar")
           )
         )
-      }
+      )
+    )
+  }
 
-      test("no header") {
-        val input = s"""
+  test("decoding, no header") {
+    val input = s"""
           |1,name,section,1250,20
           |""".stripMargin
-        assert(
-          parseInput(input) == Seq(
-            Right(Entry(1, "name", "section", 1250, 20.toByte))
-          )
-        )
-      }
-    }
+    assertEquals(
+      parseInput(input),
+      List(
+        Right(Entry(1, "name", "section", 1250, 20.toByte))
+      )
+    )
   }
 }

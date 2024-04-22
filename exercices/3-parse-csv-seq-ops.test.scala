@@ -1,9 +1,5 @@
-//> using:
-//>   lib "com.lihaoyi::utest::0.7.10"
-//>   target { scope "test" }
+//> using toolkit default
 package ex3
-
-import utest._
 
 case class Entry(
     id: Int,
@@ -53,7 +49,7 @@ extension (entries: Seq[Entry]) {
     }
 }
 
-object ParseCsvSeqOpsSuite extends TestSuite {
+class ParseCsvSeqOpsSuite extends munit.FunSuite {
   val input =
     """id, name, sectionId, salary, age
       |1,Joe,A,1000,20
@@ -81,49 +77,44 @@ object ParseCsvSeqOpsSuite extends TestSuite {
     Entry(9, "Adam Nowak", "B", 2000, 25.toByte),
     Entry(10, "The choosen one", "B", 1660, 30.toByte)
   )
-  override val tests = Tests {
-    test("parses entries correctly") {
-      test("correct entries size") {
-        assert(entries.size == 10)
-      }
-      test("correct values") {
-        assert(entries == expectedEntries)
-      }
-    }
-    test("entries sequence ops") {
-      test("average age") {
-        assert(entries.avarageAge == 30)
-      }
-      test("with max salary") {
-        val result = entries.withMaxSalary
-        val expected = expectedEntries.find(_.id == 6)
-        assert(result.nonEmpty)
-        assert(expected == result)
-      }
-      test("with max salary on empty sequence") {
-        val entires = List.empty[Entry]
-        assert(entires.withMaxSalary == None)
-      }
-      test("salaries by section id") {
-        assert(
-          entries.avarageSalaryBySection == Map(
-            "A" -> 1033,
-            "B" -> 1665,
-            "C" -> 2266
-          )
-        )
-      }
-      test("salaries view for age < 30") {
-        val expected = Seq(
+  test("parses entries correctly") {
+    assertEquals(entries.size, 10, "entries size")
+    assertEquals(entries, expectedEntries)
+  }
+  test("avg age") {
+    assertEquals(entries.avarageAge, 30, "incorrect average age")
+  }
+  test("max salary") {
+    val result = entries.withMaxSalary
+    assert(result.nonEmpty, "result was empty")
+    assertEquals(result, expectedEntries.find(_.id == 6))
+  }
+
+  test("max salary on empty sequence") {
+    val entires = List.empty[Entry]
+    assertEquals(entires.withMaxSalary, None)
+  }
+  test("salaries by section id") {
+    assertEquals(
+      entries.avarageSalaryBySection,
+      Map(
+        "A" -> 1033,
+        "B" -> 1665,
+        "C" -> 2266
+      )
+    )
+  }
+
+  test("salaries view for age < 30") {
+    val expected =
+      assertEquals(
+        entries.salariesView(_.age < 30),
+        Seq(
           EntrySalaryView(1, 1000),
           EntrySalaryView(2, 1500),
           EntrySalaryView(4, 1200),
           EntrySalaryView(9, 2000)
         )
-        assert(entries.salariesView(_.age < 30) == expected)
-      }
-
-    }
-
+      )
   }
 }

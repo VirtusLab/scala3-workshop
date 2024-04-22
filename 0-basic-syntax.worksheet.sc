@@ -32,7 +32,7 @@ val addOp: Int => Int = addFive
 // Functions created as value can be used in the same way as standard methods
 addOp(10)
 // Function defined as a method can be converted to value by using _ operation
-val getNumber = getSomeNumber _
+val getNumber: () => Int = getSomeNumber
 
 // lazy val allows to define a variable for which initilization can be delayed
 // it would be initialized upon first usage
@@ -72,8 +72,7 @@ val str5 = """{
              |}""".stripMargin
 
 // Conditional excpessions
-if luckyNumber < 10 then
-  println("<10") // New syntax (Scala 3): if <cond> then <expr>
+if luckyNumber < 10 then println("<10") // New syntax (Scala 3): if <cond> then <expr>
 else if (luckyNumber > 50) // Old syntax Scala 2: if (<cond>) <expr>
   println(">50")
 else {
@@ -98,10 +97,11 @@ else {
 
 // The main purpose of match expression is patten matching, which is way more powerfull then switch
 // E.g. you can match the string literals
-"foo" match {
-  case "bar" => 0
-  case "foo" => 1
-  case _     => -1
+("my-foo-bar": String) match {
+  case "foo"                        => "just foo"
+  case s"foo-${suffix}"             => suffix
+  case v @ s"${prefix}foo${suffix}" => s"prefix=$prefix, foo, suffix=$suffix, whole=$v"
+  case other                        => s"something else: $other"
 }
 
 // Or you can match on complex types or event match on it's extracted values

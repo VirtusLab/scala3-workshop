@@ -38,7 +38,7 @@ val y = (n: Int) => println(msg * n)
 y(3)
 
 // Each function can be assigned to a variable
-val functionAsValue = stringLength _
+val functionAsValue: String => Int = stringLength
 functionAsValue(msg)
 
 // Partial function is a function which does not define a result all it's possible arguments
@@ -64,9 +64,7 @@ replaceThis("This Function is Value")
 
 // Functions can define a defualt arguments, they would be used if none or only some of the arguments would be specified
 def buildGreeting(who: String = "Stranger", withGift: Option[String] = None) = {
-  s"Hello $who" + withGift.fold(", I have nothing for you :<")(gift =>
-    s",  here is my gift - $gift"
-  )
+  s"Hello $who" + withGift.fold(", I have nothing for you :<")(gift => s",  here is my gift - $gift")
 }
 
 // Usage of default variant

@@ -1,12 +1,6 @@
-//> using:
-//>   lib "com.lihaoyi::utest::0.7.10"
+//> using toolkit default
+// https://docs.scala-lang.org/toolkit/introduction.html
 
-import utest._
-
-object HelloWorldTest extends TestSuite {
-  override val tests = Tests(
-    test("tests do work") {
-      assert(2 * 2 == 2 + 2)
-    }
-  )
-}
+class HelloWorldTest extends munit.FunSuite:
+  test("tests do work"):
+    assertEquals(2 * 2, 2 + 2)

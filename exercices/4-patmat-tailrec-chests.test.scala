@@ -1,8 +1,6 @@
-//> using:
-//>   lib "com.lihaoyi::utest::0.7.10"
-//>   target { scope "test" }
+//> using toolkit default
+
 package ex4
-import utest._
 
 sealed trait Item { def id: Item.Id }
 object Item {
@@ -43,52 +41,47 @@ def listAccessibleChests(queue: List[Item]): Set[Item.Id] =
   loop(queue = queue, opened = Set.empty, storage = Map.empty)
 end listAccessibleChests
 
-object PatMatChestsSuite extends TestSuite {
-  val tests = Tests {
-    import Item._
-    test("Returns nil if cannot open any chests") {
-      test("empty input") {
-        assert(Set.empty == listAccessibleChests(Nil))
-      }
-      test("only keys") {
-        assert(Set.empty == listAccessibleChests(List(Key(1))))
-      }
-      test("only chests") {
-        assert(Set.empty == listAccessibleChests(List(Chest(1, Nil))))
-      }
-    }
+class PatMatChestsSuite extends munit.FunSuite {
+  import Item._
+  test("Returns nil if cannot open any chests") {
+    assertEquals(Set.empty, listAccessibleChests(Nil))
+    assertEquals(Set.empty, listAccessibleChests(List(Key(1))))
+    assertEquals(Set.empty, listAccessibleChests(List(Chest(1, Nil))))
+  }
 
-    test("Returns opened chests ids") {
-      test("simple case") {
-        assert(
-          listAccessibleChests(Key(1) :: Chest(1, Nil) :: Nil) == Set(1)
-        )
-      }
-      test("standard case") {
-        val input =
-          Key(1) ::
-            Chest(2, items = Nil) ::
-            Chest(1, items = Nil) ::
-            Nil
-        val output = Set(1)
-        val result = listAccessibleChests(input)
-        assert(result == output)
-      }
+  test("Returns opened chests ids") {
+    assertEquals(
+      listAccessibleChests(Key(1) :: Chest(1, Nil) :: Nil),
+      Set(1),
+      "case 1"
+    )
 
-      test("nested") {
+    assertEquals(
+      listAccessibleChests(
+        Key(1) ::
+          Chest(2, items = Nil) ::
+          Chest(1, items = Nil) ::
+          Nil
+      ),
+      Set(1),
+      "case 2"
+    )
+
+    assertEquals(
+      {
         lazy val chest1 = Chest(1, items = Key(2) :: Nil)
         lazy val chest2 = Chest(2, items = Key(3) :: Key(4) :: chest3 :: Nil)
         lazy val chest3 = Chest(3, items = chest4 :: Key(5) :: Nil)
         lazy val chest4 = Chest(4, items = Chest(5, Nil) :: Nil)
-        val input = List(
-          Key(1),
-          chest1,
-          chest2
+        listAccessibleChests(
+          List(
+            Key(1),
+            chest1,
+            chest2
+          )
         )
-        val output = Set(1, 2, 3, 4)
-        val result = listAccessibleChests(input)
-        assert(result == output)
-      }
-    }
+      },
+      Set(1, 2, 3, 4)
+    )
   }
 }

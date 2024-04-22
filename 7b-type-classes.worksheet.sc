@@ -10,6 +10,9 @@ sealed trait JsonEncoder[T]:
   // extension method that can be used on instance of objects having JsonEncoder defined in the scope
   extension (value: T) final def toJson: String = encode(value)
 
+// Extension can be also defined outside the type class
+// extension [T] (value: T) final def toJson(using encoder: JsonEncoder[T]): String = encoder.encode(value)
+
 // We can define a type class for types we don't have control off, similary to extension methods
 // It's a good practive to define type-classess for primitive types in type-class companion object
 object JsonEncoder {
@@ -32,9 +35,10 @@ object Stats {
 sealed trait Base
 case class Result(module: String, stats: Stats) extends Base
 object Result {
-  given JsonEncoder[Result] with
+  given JsonEncoder[Result] = new JsonEncoder[Result] {
     override def encode(value: Result): String =
       s"""{"module": ${value.module.toJson}, "stats": ${value.stats.toJson}}"""
+  }
 }
 
 // We can now use our JsonEncoder type classes to on our types
@@ -63,17 +67,17 @@ val resultsAndStats: Seq[Base] = Seq(
   Result("module1", Stats(count = 10, message = "Hello world")),
   Stats(count = 12, message = "Hello Scala")
 )
-// toListOfJsons(resultsAndStats: _*)
-// toListOfJsons("hello", 123)
-locally {
+// toListOfJsons(resultsAndStats*)
+def localEncoders() = {
   given JsonEncoder[Base] with
     override def encode(value: Base): String = value match {
       case v: Result => v.toJson
       case v: Stats  => v.toJson
     }
   // In this scope there is an instance of JsonEncoder[Base] so it would compile
-  toListOfJsons(resultsAndStats: _*)
+  toListOfJsons(resultsAndStats*)
 }
+// toListOfJsons("hello", 123)
 
 // Type classess can be also automatically derived for enums, case classes/objects and sealed types,
 // however we would not discuss this feature today, example of usage:

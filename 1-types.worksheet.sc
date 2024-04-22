@@ -1,23 +1,22 @@
-/** Everyting in Scala is typed
-  * https://docs.scala-lang.org/tour/unified-types.html Any / \ AnyVal AnyRef
-  * Int Long Unit Float Double | String Option <custom types> \ | / Nothing
+/** Everyting in Scala is typed https://docs.scala-lang.org/tour/unified-types.html Any / \ AnyVal AnyRef Int Long Unit
+  * Float Double | String Option <custom types> \ | / Nothing
   */
 
 // AnyVal is a base type of all primitive values
-var anyVal: AnyVal = _
+var anyVal: AnyVal = -1
 anyVal = 1
 anyVal = 1L
 anyVal = 1.0f
 anyVal
 
 // AnyRef is a base type of all the reference types
-var anyRef: AnyRef = _
+var anyRef: AnyRef = new {}
 anyRef = "Hello"
 anyRef = Some(1)
 anyRef = List(1, 2, 3)
 
 // Any is supertype of AnyVal and AnyRef
-var any: Any = _
+var any: Any = ()
 any = anyVal
 any = anyRef
 
@@ -115,7 +114,7 @@ enum Color(val hex: Int):
   case Blue extends Color(0x00ff00)
 
 val color = Color.Green
-color.hex
+val hexColor = color.hex
 
 enum Shape:
   case Circe, Square, Triangle
