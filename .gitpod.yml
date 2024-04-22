@@ -1,7 +1,12 @@
+
 tasks:
   # Install Scala-cli
-  - init: |
-      brew install Virtuslab/scala-cli/scala-cli
+  - before: sdk install scalacli
+    init: |
       scala-cli config suppress-warning.directives-in-multiple-files true
       scala-cli config suppress-warning.suppress-warning.outdated-dependencies-files true
       scala-cli setup-ide .
+
+vscode:
+  extensions:
+    - scalameta.metals
