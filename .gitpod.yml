@@ -1,11 +1,14 @@
 
 tasks:
   # Install Scala-cli
-  - before: sdk install scalacli
+  - before: |
+      yes | sdk install java 17.0.9-tem
+      yes | sdk install scalacli
     init: |
       scala-cli config suppress-warning.directives-in-multiple-files true
       scala-cli config suppress-warning.suppress-warning.outdated-dependencies-files true
       scala-cli setup-ide .
+      scala-cli compile .
 
 vscode:
   extensions:
